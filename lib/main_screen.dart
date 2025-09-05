@@ -1,5 +1,9 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
-import 'package:tapptitude/recipe_favorites_list.dart';
+import 'package:flutter_gemini/flutter_gemini.dart';
+import 'package:tapptitude/recipe.dart';
+import 'package:tapptitude/recipe_search_result_list.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -11,26 +15,34 @@ class MainScreen extends StatefulWidget {
 }
 
 class _MainScreenState extends State {
-  final List<String> recipes = [
-    "Spaghetti Carbonara",
-    "Chicken Alfredo",
-    "Beef Stroganoff",
-    "Vegetable Stir Fry",
-    "Fish Tacos",
-    "Lentil Soup",
-    "Caesar Salad",
-    "Pancakes",
-    "Grilled Cheese Sandwich",
-    "Chocolate Chip Cookies",
-  ];
+  List<Recipe> _resultedRecipes = [];
 
-  fetchRecipes() async {
-    // Simulate network delay
-    await Future.delayed(Duration(seconds: 2));
-    // Normally, you'd fetch data from an API here
+  _fetchRecipes(String text) async {
+    final res = await Gemini.instance.prompt(
+      parts: [
+        Part.text("Give me 3 or 4 recipes for the following dish:"),
+        Part.text(text),
+        Part.text(
+          'Return them as json, each recipe having the following fields: String name, String duration, String ingredients, String instructions.',
+        ),
+      ],
+    );
+
+    final parsedString = res?.output
+        ?.replaceAll('```', '')
+        .replaceFirst('json', '');
+
+    final json = jsonDecode(parsedString ?? '[]') as List<dynamic>;
+
+    final recipes = json.map((e) => Recipe.fromJson(e)).toList();
+
     setState(() {
-      recipes.addAll(["New Recipe 1", "New Recipe 2", "New Recipe 3"]);
+      _resultedRecipes = recipes;
     });
+  }
+
+  _handleSubmit(String text) {
+    _fetchRecipes(text);
   }
 
   @override
@@ -47,6 +59,7 @@ class _MainScreenState extends State {
                 hintText: 'What do you feel like eating?',
                 prefixIcon: Icon(Icons.search),
               ),
+              onSubmitted: _handleSubmit,
             ),
 
             SizedBox(height: 8),
@@ -54,14 +67,18 @@ class _MainScreenState extends State {
             Align(
               alignment: Alignment.centerLeft,
               child: Text(
-                "Your Favorites",
+                "Favorites",
                 style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
               ),
             ),
 
             SizedBox(height: 8),
 
-            Expanded(child: RecipeFavoritesList(recipes: recipes)),
+            Expanded(
+              child: _resultedRecipes.isEmpty
+                  ? Center(child: Text("No recipes yet."))
+                  : RecipeSearchResultList(recipes: _resultedRecipes),
+            ),
           ],
         ),
       ),

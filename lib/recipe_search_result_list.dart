@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:tapptitude/recipe.dart';
 import 'package:tapptitude/recipe_item.dart';
 
-class RecipeFavoritesList extends StatelessWidget {
+class RecipeSearchResultList extends StatelessWidget {
   final List<Recipe> recipes;
 
-  const RecipeFavoritesList({super.key, required this.recipes});
+  const RecipeSearchResultList({super.key, required this.recipes});
 
   @override
   Widget build(BuildContext context) {
