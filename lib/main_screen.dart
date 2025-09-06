@@ -3,6 +3,7 @@ import 'package:tapptitude/provider.dart';
 import 'package:tapptitude/recipes/recipe.dart';
 import 'package:tapptitude/recipes/recipes_list.dart';
 import 'package:tapptitude/recipes/recipes_notifier.dart';
+import 'package:tapptitude/shared/screen_wrapper.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -47,8 +48,7 @@ class _MainScreenState extends State {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text("Tapptitude")),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
+      body: ScreenWrapper(
         child: Column(
           children: [
             TextField(

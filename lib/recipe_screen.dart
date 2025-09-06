@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:tapptitude/provider.dart';
 import 'package:tapptitude/recipes/recipe.dart';
-import 'package:tapptitude/recipes/recipes_notifier.dart';
+import 'package:tapptitude/recipes/toggle_favorite_button.dart';
+import 'package:tapptitude/shared/screen_wrapper.dart';
 
 class RecipeScreen extends StatelessWidget {
   final Recipe recipe;
@@ -10,12 +10,9 @@ class RecipeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final recipesNotifier = Provider.of<RecipesNotifier>(context);
-
     return Scaffold(
       appBar: AppBar(title: Text('Recipe')),
-      body: Padding(
-        padding: EdgeInsets.all(16),
+      body: ScreenWrapper(
         child: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -51,16 +48,7 @@ class RecipeScreen extends StatelessWidget {
                       ],
                     ),
                   ),
-                  IconButton(
-                    icon: Icon(
-                      recipesNotifier.isFavorite(recipe)
-                          ? Icons.favorite
-                          : Icons.favorite_border,
-                    ),
-                    onPressed: () {
-                      recipesNotifier.toggleFavorite(recipe);
-                    },
-                  ),
+                  ToggleFavoriteButton(recipe: recipe),
                 ],
               ),
 

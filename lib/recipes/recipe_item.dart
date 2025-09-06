@@ -3,6 +3,7 @@ import 'package:tapptitude/provider.dart';
 import 'package:tapptitude/recipe_screen.dart';
 import 'package:tapptitude/recipes/recipe.dart';
 import 'package:tapptitude/recipes/recipes_notifier.dart';
+import 'package:tapptitude/recipes/toggle_favorite_button.dart';
 
 class RecipeItem extends StatelessWidget {
   final Recipe recipe;
@@ -54,16 +55,7 @@ class RecipeItem extends StatelessWidget {
               ),
             ),
 
-            IconButton(
-              icon: Icon(
-                recipesNotifier.isFavorite(recipe)
-                    ? Icons.favorite
-                    : Icons.favorite_border,
-              ),
-              onPressed: () {
-                recipesNotifier.toggleFavorite(recipe);
-              },
-            ),
+            ToggleFavoriteButton(recipe: recipe),
           ],
         ),
       ),
