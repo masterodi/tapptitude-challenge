@@ -1,9 +1,8 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
-import 'package:flutter_gemini/flutter_gemini.dart';
-import 'package:tapptitude/recipe.dart';
-import 'package:tapptitude/recipe_search_result_list.dart';
+import 'package:tapptitude/provider.dart';
+import 'package:tapptitude/recipes/recipe.dart';
+import 'package:tapptitude/recipes/recipes_list.dart';
+import 'package:tapptitude/recipes/recipes_notifier.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -15,34 +14,33 @@ class MainScreen extends StatefulWidget {
 }
 
 class _MainScreenState extends State {
-  List<Recipe> _resultedRecipes = [];
+  List<Recipe> _recipes = [];
+  bool _hasText = false;
+  bool _isLoading = false;
+  String? aux;
 
-  _fetchRecipes(String text) async {
-    final res = await Gemini.instance.prompt(
-      parts: [
-        Part.text("Give me 3 or 4 recipes for the following dish:"),
-        Part.text(text),
-        Part.text(
-          'Return them as json, each recipe having the following fields: String name, String duration, String ingredients, String instructions.',
-        ),
-      ],
-    );
-
-    final parsedString = res?.output
-        ?.replaceAll('```', '')
-        .replaceFirst('json', '');
-
-    final json = jsonDecode(parsedString ?? '[]') as List<dynamic>;
-
-    final recipes = json.map((e) => Recipe.fromJson(e)).toList();
+  _handleSubmit(String text) async {
+    aux = text;
 
     setState(() {
-      _resultedRecipes = recipes;
+      _hasText = text.isNotEmpty;
     });
-  }
 
-  _handleSubmit(String text) {
-    _fetchRecipes(text);
+    if (text.isEmpty) {
+      return;
+    }
+
+    setState(() {
+      _recipes = [];
+      _isLoading = true;
+    });
+
+    final recipes = await Recipe.generateRecipes(text);
+
+    setState(() {
+      _recipes = recipes;
+      _isLoading = false;
+    });
   }
 
   @override
@@ -50,7 +48,7 @@ class _MainScreenState extends State {
     return Scaffold(
       appBar: AppBar(title: Text("Tapptitude")),
       body: Padding(
-        padding: const EdgeInsets.all(8),
+        padding: const EdgeInsets.all(16),
         child: Column(
           children: [
             TextField(
@@ -64,24 +62,88 @@ class _MainScreenState extends State {
 
             SizedBox(height: 8),
 
-            Align(
-              alignment: Alignment.centerLeft,
-              child: Text(
-                "Favorites",
-                style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
-              ),
-            ),
-
-            SizedBox(height: 8),
-
             Expanded(
-              child: _resultedRecipes.isEmpty
-                  ? Center(child: Text("No recipes yet."))
-                  : RecipeSearchResultList(recipes: _resultedRecipes),
+              child: _hasText
+                  ? _SuggestedRecipes(
+                      recipes: _recipes,
+                      isLoading: _isLoading,
+                      onRefresh: () => _handleSubmit(aux ?? ""),
+                    )
+                  : _FavoriteRecipes(),
             ),
           ],
         ),
       ),
+    );
+  }
+}
+
+class _FavoriteRecipes extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final recipesNotifier = Provider.of<RecipesNotifier>(context);
+
+    return Column(
+      children: [
+        Align(
+          alignment: Alignment.centerLeft,
+          child: Text(
+            "Favorites",
+            style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
+          ),
+        ),
+
+        SizedBox(height: 8),
+
+        recipesNotifier.value.favoriteRecipes.isEmpty
+            ? Center(child: Text("No favorite recipes."))
+            : Expanded(
+                child: RecipesList(
+                  recipes: recipesNotifier.value.favoriteRecipes,
+                ),
+              ),
+      ],
+    );
+  }
+}
+
+class _SuggestedRecipes extends StatelessWidget {
+  final List<Recipe> recipes;
+  final bool isLoading;
+  final void Function()? onRefresh;
+
+  const _SuggestedRecipes({
+    required this.recipes,
+    this.isLoading = false,
+    required this.onRefresh,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Align(
+          alignment: Alignment.centerLeft,
+          child: Text(
+            "Suggested Recipes",
+            style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
+          ),
+        ),
+
+        SizedBox(height: 8),
+
+        if (isLoading)
+          Expanded(child: Center(child: CircularProgressIndicator()))
+        else if (recipes.isEmpty) ...[
+          Center(child: Text("No suggested recipes.")),
+          SizedBox(height: 8),
+          ElevatedButton(onPressed: onRefresh, child: Text('Refresh')),
+        ] else ...[
+          Expanded(child: RecipesList(recipes: recipes)),
+          SizedBox(height: 8),
+          ElevatedButton(onPressed: onRefresh, child: Text('Refresh')),
+        ],
+      ],
     );
   }
 }

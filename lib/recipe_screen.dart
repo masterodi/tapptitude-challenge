@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:tapptitude/recipe.dart';
+import 'package:tapptitude/provider.dart';
+import 'package:tapptitude/recipes/recipe.dart';
+import 'package:tapptitude/recipes/recipes_notifier.dart';
 
 class RecipeScreen extends StatelessWidget {
   final Recipe recipe;
@@ -8,6 +10,8 @@ class RecipeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final recipesNotifier = Provider.of<RecipesNotifier>(context);
+
     return Scaffold(
       appBar: AppBar(title: Text('Recipe')),
       body: Padding(
@@ -25,16 +29,39 @@ class RecipeScreen extends StatelessWidget {
 
               SizedBox(height: 16),
 
-              Text(
-                recipe.name,
-                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Flexible(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          recipe.name,
+                          style: TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
 
-              SizedBox(height: 8),
-
-              Text(
-                'Duration: ${recipe.duration}',
-                style: TextStyle(fontSize: 16),
+                        Text(
+                          'Duration: ${recipe.duration}',
+                          style: TextStyle(fontSize: 16),
+                        ),
+                      ],
+                    ),
+                  ),
+                  IconButton(
+                    icon: Icon(
+                      recipesNotifier.isFavorite(recipe)
+                          ? Icons.favorite
+                          : Icons.favorite_border,
+                    ),
+                    onPressed: () {
+                      recipesNotifier.toggleFavorite(recipe);
+                    },
+                  ),
+                ],
               ),
 
               SizedBox(height: 16),

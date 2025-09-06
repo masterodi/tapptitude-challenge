@@ -1,26 +1,32 @@
 import 'package:flutter/material.dart';
-import 'package:tapptitude/recipe.dart';
+import 'package:tapptitude/provider.dart';
 import 'package:tapptitude/recipe_screen.dart';
+import 'package:tapptitude/recipes/recipe.dart';
+import 'package:tapptitude/recipes/recipes_notifier.dart';
 
 class RecipeItem extends StatelessWidget {
   final Recipe recipe;
 
   const RecipeItem({super.key, required this.recipe});
 
+  _handleRecipeNavigation(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) {
+          return RecipeScreen(recipe: recipe);
+        },
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final recipesNotifier = Provider.of<RecipesNotifier>(context);
+
     return Card(
       child: InkWell(
-        onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) {
-                return RecipeScreen(recipe: recipe);
-              },
-            ),
-          );
-        },
+        onTap: () => _handleRecipeNavigation(context),
         child: Row(
           children: [
             ClipRRect(
@@ -50,9 +56,13 @@ class RecipeItem extends StatelessWidget {
 
             IconButton(
               icon: Icon(
-                recipe.isFavorite ? Icons.favorite : Icons.favorite_border,
+                recipesNotifier.isFavorite(recipe)
+                    ? Icons.favorite
+                    : Icons.favorite_border,
               ),
-              onPressed: () {},
+              onPressed: () {
+                recipesNotifier.toggleFavorite(recipe);
+              },
             ),
           ],
         ),
